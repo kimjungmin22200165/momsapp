@@ -20,6 +20,90 @@ body {
     user-select: none;
 }
 
+/* 모드 선택 화면 */
+.mode-select-screen {
+    background: white;
+    border-radius: 20px;
+    padding: 40px;
+    box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+    max-width: 900px;
+    width: 100%;
+}
+
+.mode-select-container h1 {
+    color: #667eea;
+    font-size: 3em;
+    margin-bottom: 10px;
+    text-align: center;
+    text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.mode-select-container h2 {
+    color: #666;
+    font-size: 1.5em;
+    margin-bottom: 30px;
+    text-align: center;
+}
+
+.mode-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 30px;
+    margin-top: 20px;
+}
+
+.mode-card {
+    background: linear-gradient(135deg, #f8f9fa, #e9ecef);
+    border: 3px solid #dee2e6;
+    border-radius: 20px;
+    padding: 30px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    text-align: center;
+}
+
+.mode-card:hover {
+    transform: translateY(-10px);
+    box-shadow: 0 15px 40px rgba(102, 126, 234, 0.3);
+    border-color: #667eea;
+}
+
+.mode-card:active {
+    transform: translateY(-5px);
+}
+
+.mode-icon {
+    font-size: 5em;
+    margin-bottom: 15px;
+}
+
+.mode-card h3 {
+    color: #667eea;
+    font-size: 1.8em;
+    margin-bottom: 15px;
+}
+
+.mode-card p {
+    color: #666;
+    font-size: 1.1em;
+    line-height: 1.6;
+    margin-bottom: 20px;
+}
+
+.mode-features {
+    list-style: none;
+    padding: 0;
+    text-align: left;
+    display: inline-block;
+}
+
+.mode-features li {
+    color: #495057;
+    font-size: 1em;
+    margin: 10px 0;
+    padding-left: 5px;
+}
+
 /* 레벨 선택 화면 */
 .level-select-screen {
     background: white;
@@ -30,6 +114,10 @@ body {
     width: 100%;
     max-height: 90vh;
     overflow-y: auto;
+}
+
+.level-select-container .btn-back {
+    margin-bottom: 15px;
 }
 
 .level-select-container h1 {
@@ -508,140 +596,197 @@ body {
 
 @media (max-width: 600px) {
     body {
-        padding: 10px;
+        padding: 5px;
         min-height: 100vh;
         min-height: -webkit-fill-available;
+        overflow-x: hidden;
+    }
+
+    .mode-select-screen {
+        padding: 15px;
+        max-width: 100%;
+    }
+
+    .mode-select-container h1 {
+        font-size: 1.8em;
+    }
+
+    .mode-select-container h2 {
+        font-size: 1.1em;
+        margin-bottom: 20px;
+    }
+
+    .mode-grid {
+        grid-template-columns: 1fr;
+        gap: 15px;
+    }
+
+    .mode-card {
+        padding: 20px;
+    }
+
+    .mode-icon {
+        font-size: 3em;
+    }
+
+    .mode-card h3 {
+        font-size: 1.3em;
+    }
+
+    .mode-card p {
+        font-size: 0.95em;
     }
 
     .level-select-screen {
-        padding: 15px;
+        padding: 10px;
         max-width: 100%;
     }
 
     .level-select-container h1 {
-        font-size: 2em;
+        font-size: 1.8em;
     }
 
     .level-select-container h2 {
-        font-size: 1.1em;
+        font-size: 1em;
     }
 
     .level-grid {
         grid-template-columns: repeat(5, 1fr);
-        gap: 8px;
+        gap: 6px;
     }
 
     .level-btn {
-        font-size: 0.85em;
+        font-size: 0.8em;
     }
 
     .game-container {
-        padding: 15px;
+        padding: 10px;
         max-width: 100%;
+        max-height: 100vh;
+        overflow-y: auto;
     }
 
-    .game-header h1 {
-        font-size: 1.8em;
+    .game-header {
         margin-bottom: 10px;
     }
 
+    .game-header h1 {
+        font-size: 1.5em;
+        margin-bottom: 8px;
+    }
+
+    .level-info {
+        margin-bottom: 8px;
+    }
+
+    .btn-back {
+        padding: 6px 12px;
+        font-size: 0.85em;
+    }
+
+    .current-level {
+        font-size: 0.95em;
+    }
+
     .game-info {
-        padding: 10px;
-        flex-wrap: wrap;
-        gap: 10px;
+        padding: 8px;
+        flex-wrap: nowrap;
+        gap: 5px;
+        margin-bottom: 8px;
     }
 
     .score-container, .time-container, .target-container {
         flex: 1;
-        min-width: 80px;
+        min-width: 70px;
     }
 
     .label {
-        font-size: 0.8em;
+        font-size: 0.7em;
     }
 
     .value {
-        font-size: 1.2em;
+        font-size: 1em;
+    }
+
+    .items-container {
+        margin-bottom: 10px;
     }
 
     .items-container h3 {
-        font-size: 1em;
-        margin-bottom: 8px;
+        font-size: 0.9em;
+        margin-bottom: 6px;
     }
 
     .items-grid {
         grid-template-columns: repeat(3, 1fr);
-        gap: 6px;
+        gap: 5px;
     }
 
     .item-btn {
-        padding: 8px;
-        min-height: 50px;
+        padding: 6px;
+        min-height: 45px;
     }
 
     .item-icon {
-        font-size: 1.3em;
+        font-size: 1.1em;
     }
 
     .item-count {
-        width: 18px;
-        height: 18px;
-        font-size: 0.65em;
+        width: 16px;
+        height: 16px;
+        font-size: 0.6em;
     }
 
     .game-board {
-        padding: 5px;
-        gap: 3px;
+        padding: 3px;
+        gap: 2px;
         max-width: 100%;
-        margin: 0 auto 15px;
+        width: 100%;
+        margin: 0 auto 10px;
     }
 
     .block {
-        font-size: 1.3em;
-        border-radius: 6px;
+        font-size: 1em;
+        border-radius: 4px;
+    }
+
+    .block.obstacle::before {
+        font-size: 1em;
     }
 
     .btn {
-        padding: 12px 30px;
-        font-size: 1em;
+        padding: 10px 25px;
+        font-size: 0.9em;
         width: 100%;
-        max-width: 200px;
+        max-width: 180px;
     }
 
     .modal-content {
-        padding: 30px 20px;
+        padding: 25px 15px;
         margin: 0 10px;
     }
 
     .modal-content h2 {
-        font-size: 1.5em;
+        font-size: 1.3em;
+    }
+
+    .modal-content p {
+        font-size: 1em;
+    }
+
+    .modal-buttons {
+        gap: 8px;
     }
 }
 
 /* 작은 화면 추가 최적화 */
 @media (max-width: 400px) {
-    .game-header h1 {
-        font-size: 1.5em;
-    }
-
-    .block {
-        font-size: 1.1em;
-    }
-
-    .game-board {
-        gap: 2px;
-        padding: 3px;
-    }
-}
-
-/* 가로 모드 최적화 */
-@media (max-height: 700px) and (orientation: landscape) {
     body {
-        padding: 5px;
+        padding: 3px;
     }
 
     .game-container {
-        padding: 10px;
+        padding: 8px;
     }
 
     .game-header h1 {
@@ -650,15 +795,121 @@ body {
     }
 
     .game-info {
-        padding: 8px;
+        padding: 6px;
+        gap: 3px;
     }
 
-    .game-board {
-        max-width: 400px;
-        margin: 0 auto 10px;
+    .label {
+        font-size: 0.65em;
+    }
+
+    .value {
+        font-size: 0.9em;
+    }
+
+    .items-container h3 {
+        font-size: 0.85em;
+        margin-bottom: 5px;
+    }
+
+    .items-grid {
+        gap: 4px;
+    }
+
+    .item-btn {
+        padding: 5px;
+        min-height: 40px;
+    }
+
+    .item-icon {
+        font-size: 1em;
     }
 
     .block {
-        font-size: 1em;
+        font-size: 0.9em;
+    }
+
+    .game-board {
+        gap: 2px;
+        padding: 2px;
+        margin-bottom: 8px;
+    }
+
+    .btn {
+        padding: 8px 20px;
+        font-size: 0.85em;
+    }
+}
+
+/* 가로 모드 최적화 */
+@media (max-height: 700px) and (orientation: landscape) {
+    body {
+        padding: 3px;
+    }
+
+    .game-container {
+        padding: 5px;
+        max-height: 100vh;
+        overflow-y: auto;
+    }
+
+    .game-header {
+        margin-bottom: 5px;
+    }
+
+    .game-header h1 {
+        font-size: 1.2em;
+        margin-bottom: 3px;
+    }
+
+    .game-info {
+        padding: 5px;
+        margin-bottom: 5px;
+    }
+
+    .label {
+        font-size: 0.65em;
+    }
+
+    .value {
+        font-size: 0.9em;
+    }
+
+    .items-container {
+        margin-bottom: 5px;
+    }
+
+    .items-container h3 {
+        font-size: 0.8em;
+        margin-bottom: 3px;
+    }
+
+    .items-grid {
+        gap: 4px;
+    }
+
+    .item-btn {
+        padding: 5px;
+        min-height: 35px;
+    }
+
+    .item-icon {
+        font-size: 0.9em;
+    }
+
+    .game-board {
+        max-width: 350px;
+        margin: 0 auto 5px;
+        padding: 3px;
+        gap: 2px;
+    }
+
+    .block {
+        font-size: 0.85em;
+    }
+
+    .btn {
+        padding: 6px 20px;
+        font-size: 0.8em;
     }
 }

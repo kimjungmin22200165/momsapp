@@ -10,11 +10,44 @@
     <link rel="stylesheet" href="style.css">
 </head>
 <body>
-    <!-- 레벨 선택 화면 -->
-    <div id="level-select-screen" class="level-select-screen">
-        <div class="level-select-container">
+    <!-- 모드 선택 화면 -->
+    <div id="mode-select-screen" class="mode-select-screen">
+        <div class="mode-select-container">
             <h1>애니팡</h1>
-            <h2>레벨 선택</h2>
+            <h2>게임 모드 선택</h2>
+            <div class="mode-grid">
+                <div id="story-mode-btn" class="mode-card">
+                    <div class="mode-icon">🎯</div>
+                    <h3>스토리 모드</h3>
+                    <p>목표 점수를 달성하여<br>100개의 레벨을 클리어하세요!</p>
+                    <ul class="mode-features">
+                        <li>✅ 100개 레벨</li>
+                        <li>✅ 6가지 아이템</li>
+                        <li>✅ 장애물 등장</li>
+                        <li>✅ 별 수집 시스템</li>
+                    </ul>
+                </div>
+                <div id="endless-mode-btn" class="mode-card">
+                    <div class="mode-icon">🏆</div>
+                    <h3>무한 도전 모드</h3>
+                    <p>시간 내에 최고 점수를<br>기록하세요!</p>
+                    <ul class="mode-features">
+                        <li>⚡ 아이템 없음</li>
+                        <li>⚡ 순수 실력 겨루기</li>
+                        <li>⚡ 최고 점수 갱신</li>
+                        <li>⚡ 랭킹 시스템</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 레벨 선택 화면 -->
+    <div id="level-select-screen" class="level-select-screen" style="display: none;">
+        <div class="level-select-container">
+            <button id="back-to-mode-btn" class="btn-back">← 모드 선택</button>
+            <h1>애니팡</h1>
+            <h2 id="level-select-title">레벨 선택</h2>
             <div id="level-grid" class="level-grid">
                 <!-- 레벨 버튼들이 동적으로 생성됩니다 -->
             </div>
