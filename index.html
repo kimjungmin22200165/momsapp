@@ -10,8 +10,23 @@
     <link rel="stylesheet" href="style.css">
 </head>
 <body>
-    <div class="game-container">
+    <!-- 레벨 선택 화면 -->
+    <div id="level-select-screen" class="level-select-screen">
+        <div class="level-select-container">
+            <h1>애니팡</h1>
+            <h2>레벨 선택</h2>
+            <div id="level-grid" class="level-grid">
+                <!-- 레벨 버튼들이 동적으로 생성됩니다 -->
+            </div>
+        </div>
+    </div>
+
+    <div class="game-container" style="display: none;">
         <div class="game-header">
+            <div class="level-info">
+                <button id="back-btn" class="btn-back">← 레벨 선택</button>
+                <span class="current-level">레벨 <span id="current-level">1</span></span>
+            </div>
             <h1>애니팡</h1>
             <div class="game-info">
                 <div class="score-container">
@@ -73,7 +88,11 @@
         <div class="modal-content">
             <h2 id="game-result">게임 종료!</h2>
             <p>최종 점수: <span id="final-score">0</span></p>
-            <button id="play-again-btn" class="btn btn-primary">다시 하기</button>
+            <div class="modal-buttons">
+                <button id="play-again-btn" class="btn btn-primary">다시 하기</button>
+                <button id="next-level-btn" class="btn btn-secondary" style="display: none;">다음 레벨</button>
+                <button id="back-to-levels-btn" class="btn btn-tertiary">레벨 선택</button>
+            </div>
         </div>
     </div>
 

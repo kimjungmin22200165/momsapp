@@ -12,6 +12,12 @@ class AnipangGame {
         this.gameRunning = false;
         this.timer = null;
 
+        // 레벨 시스템
+        this.currentLevel = 1;
+        this.maxLevel = 100;
+        this.unlockedLevel = 1;
+        this.levelStars = {}; // 각 레벨별 별 개수 저장
+
         // 동물 이모지
         this.animals = ['🐶', '🐱', '🐰', '🐻', '🐼', '🦊'];
 
@@ -35,16 +41,28 @@ class AnipangGame {
     }
 
     initElements() {
+        // 레벨 선택 화면
+        this.levelSelectScreen = document.getElementById('level-select-screen');
+        this.levelGrid = document.getElementById('level-grid');
+        this.gameContainer = document.querySelector('.game-container');
+
+        // 게임 화면
         this.boardElement = document.getElementById('game-board');
         this.scoreElement = document.getElementById('score');
         this.timeElement = document.getElementById('time');
         this.targetElement = document.getElementById('target');
+        this.currentLevelElement = document.getElementById('current-level');
         this.startBtn = document.getElementById('start-btn');
         this.restartBtn = document.getElementById('restart-btn');
+        this.backBtn = document.getElementById('back-btn');
+
+        // 모달
         this.gameOverModal = document.getElementById('game-over-modal');
         this.finalScoreElement = document.getElementById('final-score');
         this.gameResultElement = document.getElementById('game-result');
         this.playAgainBtn = document.getElementById('play-again-btn');
+        this.nextLevelBtn = document.getElementById('next-level-btn');
+        this.backToLevelsBtn = document.getElementById('back-to-levels-btn');
 
         // 아이템 버튼
         this.itemButtons = {
@@ -60,18 +78,61 @@ class AnipangGame {
     bindEvents() {
         this.startBtn.addEventListener('click', () => this.startGame());
         this.restartBtn.addEventListener('click', () => this.startGame());
+        this.backBtn.addEventListener('click', () => this.showLevelSelect());
+
         this.playAgainBtn.addEventListener('click', () => {
             this.gameOverModal.classList.remove('show');
             this.startGame();
+        });
+
+        this.nextLevelBtn.addEventListener('click', () => {
+            this.gameOverModal.classList.remove('show');
+            this.currentLevel++;
+            this.startGame();
+        });
+
+        this.backToLevelsBtn.addEventListener('click', () => {
+            this.gameOverModal.classList.remove('show');
+            this.showLevelSelect();
         });
 
         // 아이템 버튼 이벤트
         Object.keys(this.itemButtons).forEach(itemType => {
             this.itemButtons[itemType].addEventListener('click', () => this.activateItem(itemType));
         });
+
+        // 초기화
+        this.loadProgress();
+        this.renderLevelSelect();
+    }
+
+    getLevelConfig(level) {
+        // 난이도에 따른 설정
+        const baseTime = 60;
+        const baseTarget = 5000;
+
+        // 레벨이 올라갈수록 목표 점수 증가, 시간은 감소
+        const targetScore = baseTarget + (level - 1) * 500;
+        const timeLimit = Math.max(30, baseTime - Math.floor((level - 1) / 5));
+
+        // 30레벨 이상부터 장애물 추가
+        const obstacleCount = level >= 30 ? Math.min(Math.floor((level - 30) / 5) + 2, 10) : 0;
+
+        return {
+            level,
+            targetScore,
+            timeLimit,
+            obstacleCount
+        };
     }
 
     startGame() {
+        // 레벨 설정 적용
+        const config = this.getLevelConfig(this.currentLevel);
+        this.targetScore = config.targetScore;
+        this.timeLimit = config.timeLimit;
+        this.obstacleCount = config.obstacleCount;
+
         this.score = 0;
         this.timeRemaining = this.timeLimit;
         this.gameRunning = true;
@@ -88,6 +149,11 @@ class AnipangGame {
             hint: 5
         };
 
+        // 화면 전환
+        this.levelSelectScreen.style.display = 'none';
+        this.gameContainer.style.display = 'block';
+
+        this.currentLevelElement.textContent = this.currentLevel;
         this.updateDisplay();
         this.updateItemButtons();
         this.startBtn.style.display = 'none';
@@ -100,6 +166,8 @@ class AnipangGame {
 
     initBoard() {
         this.board = [];
+        this.obstacles = []; // 장애물 위치 저장
+
         for (let row = 0; row < this.boardSize; row++) {
             this.board[row] = [];
             for (let col = 0; col < this.boardSize; col++) {
@@ -107,10 +175,47 @@ class AnipangGame {
             }
         }
 
+        // 장애물 추가 (30레벨 이상)
+        if (this.obstacleCount > 0) {
+            this.addObstacles();
+        }
+
         // 초기 매칭 제거
         while (this.findMatches().length > 0) {
-            this.initBoard();
+            for (let row = 0; row < this.boardSize; row++) {
+                for (let col = 0; col < this.boardSize; col++) {
+                    if (!this.isObstacle(row, col)) {
+                        this.board[row][col] = this.getRandomAnimal();
+                    }
+                }
+            }
         }
+    }
+
+    addObstacles() {
+        // 랜덤 위치에 장애물 배치
+        const positions = [];
+        for (let row = 0; row < this.boardSize; row++) {
+            for (let col = 0; col < this.boardSize; col++) {
+                positions.push({ row, col });
+            }
+        }
+
+        // Fisher-Yates 셔플
+        for (let i = positions.length - 1; i > 0; i--) {
+            const j = Math.floor(Math.random() * (i + 1));
+            [positions[i], positions[j]] = [positions[j], positions[i]];
+        }
+
+        // 장애물 배치
+        this.obstacles = positions.slice(0, this.obstacleCount);
+        this.obstacles.forEach(pos => {
+            this.board[pos.row][pos.col] = -2; // -2는 장애물 표시
+        });
+    }
+
+    isObstacle(row, col) {
+        return this.board[row] && this.board[row][col] === -2;
     }
 
     getRandomAnimal() {
@@ -126,16 +231,26 @@ class AnipangGame {
                 block.className = 'block';
                 block.dataset.row = row;
                 block.dataset.col = col;
-                block.dataset.animal = this.board[row][col];
-                block.textContent = this.animals[this.board[row][col]];
 
-                // 클릭 이벤트
-                block.addEventListener('click', () => this.handleBlockClick(row, col));
+                const cellValue = this.board[row][col];
 
-                // 터치 이벤트 (모바일)
-                block.addEventListener('touchstart', (e) => this.handleTouchStart(e, row, col), { passive: true });
-                block.addEventListener('touchmove', (e) => this.handleTouchMove(e), { passive: false });
-                block.addEventListener('touchend', (e) => this.handleTouchEnd(e), { passive: true });
+                if (cellValue === -2) {
+                    // 장애물
+                    block.classList.add('obstacle');
+                    block.textContent = '';
+                } else {
+                    // 일반 블록
+                    block.dataset.animal = cellValue;
+                    block.textContent = this.animals[cellValue];
+
+                    // 클릭 이벤트
+                    block.addEventListener('click', () => this.handleBlockClick(row, col));
+
+                    // 터치 이벤트 (모바일)
+                    block.addEventListener('touchstart', (e) => this.handleTouchStart(e, row, col), { passive: true });
+                    block.addEventListener('touchmove', (e) => this.handleTouchMove(e), { passive: false });
+                    block.addEventListener('touchend', (e) => this.handleTouchEnd(e), { passive: true });
+                }
 
                 this.boardElement.appendChild(block);
             }
@@ -144,6 +259,9 @@ class AnipangGame {
 
     handleBlockClick(row, col) {
         if (!this.gameRunning || this.isProcessing) return;
+
+        // 장애물은 클릭 불가
+        if (this.isObstacle(row, col)) return;
 
         // 아이템이 활성화된 경우
         if (this.activeItem) {
@@ -359,6 +477,9 @@ class AnipangGame {
             for (let col = 0; col < this.boardSize; col++) {
                 if (this.board[row][col] === -1) {
                     this.board[row][col] = this.getRandomAnimal();
+                } else if (this.board[row][col] === -2) {
+                    // 장애물은 그대로 유지
+                    continue;
                 }
             }
         }
@@ -385,12 +506,42 @@ class AnipangGame {
 
         this.finalScoreElement.textContent = this.score;
 
-        if (this.score >= this.targetScore) {
+        const isSuccess = this.score >= this.targetScore;
+
+        if (isSuccess) {
             this.gameResultElement.textContent = '🎉 성공! 🎉';
             this.gameResultElement.style.color = '#4ecdc4';
+
+            // 별 개수 계산 (목표의 120% 이상이면 3개, 100% 이상이면 2개, 그 외 1개)
+            let stars = 1;
+            if (this.score >= this.targetScore * 1.5) {
+                stars = 3;
+            } else if (this.score >= this.targetScore * 1.2) {
+                stars = 2;
+            }
+
+            // 진행 상태 저장
+            if (!this.levelStars[this.currentLevel] || this.levelStars[this.currentLevel] < stars) {
+                this.levelStars[this.currentLevel] = stars;
+            }
+
+            // 다음 레벨 잠금 해제
+            if (this.currentLevel < this.maxLevel && this.currentLevel >= this.unlockedLevel) {
+                this.unlockedLevel = this.currentLevel + 1;
+            }
+
+            this.saveProgress();
+
+            // 다음 레벨 버튼 표시
+            if (this.currentLevel < this.maxLevel) {
+                this.nextLevelBtn.style.display = 'inline-block';
+            } else {
+                this.nextLevelBtn.style.display = 'none';
+            }
         } else {
             this.gameResultElement.textContent = '게임 종료';
             this.gameResultElement.style.color = '#667eea';
+            this.nextLevelBtn.style.display = 'none';
         }
 
         this.gameOverModal.classList.add('show');
@@ -810,6 +961,80 @@ class AnipangGame {
         }
 
         return null;
+    }
+
+    // 레벨 시스템
+    renderLevelSelect() {
+        this.levelGrid.innerHTML = '';
+
+        for (let level = 1; level <= this.maxLevel; level++) {
+            const levelBtn = document.createElement('button');
+            levelBtn.className = 'level-btn';
+            levelBtn.textContent = level;
+
+            // 잠금 상태 확인
+            if (level > this.unlockedLevel) {
+                levelBtn.disabled = true;
+            } else {
+                levelBtn.addEventListener('click', () => this.selectLevel(level));
+
+                // 완료된 레벨 표시
+                if (this.levelStars[level]) {
+                    levelBtn.classList.add('completed');
+
+                    // 별 표시
+                    const starsSpan = document.createElement('div');
+                    starsSpan.className = 'stars';
+                    starsSpan.textContent = '⭐'.repeat(this.levelStars[level]);
+                    levelBtn.appendChild(document.createElement('br'));
+                    levelBtn.appendChild(starsSpan);
+                }
+
+                // 현재 플레이 가능한 레벨 강조
+                if (level === this.unlockedLevel && !this.levelStars[level]) {
+                    levelBtn.classList.add('current');
+                }
+            }
+
+            this.levelGrid.appendChild(levelBtn);
+        }
+    }
+
+    selectLevel(level) {
+        this.currentLevel = level;
+        this.startGame();
+    }
+
+    showLevelSelect() {
+        this.gameRunning = false;
+        if (this.timer) {
+            clearInterval(this.timer);
+        }
+
+        this.gameContainer.style.display = 'none';
+        this.levelSelectScreen.style.display = 'block';
+        this.renderLevelSelect();
+    }
+
+    saveProgress() {
+        const progress = {
+            unlockedLevel: this.unlockedLevel,
+            levelStars: this.levelStars
+        };
+        localStorage.setItem('anipangProgress', JSON.stringify(progress));
+    }
+
+    loadProgress() {
+        const saved = localStorage.getItem('anipangProgress');
+        if (saved) {
+            try {
+                const progress = JSON.parse(saved);
+                this.unlockedLevel = progress.unlockedLevel || 1;
+                this.levelStars = progress.levelStars || {};
+            } catch (e) {
+                console.error('Failed to load progress:', e);
+            }
+        }
     }
 }
 
