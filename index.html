@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="mobile-web-app-capable" content="yes">
+    <title>애니팡 게임</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div class="game-container">
+        <div class="game-header">
+            <h1>애니팡</h1>
+            <div class="game-info">
+                <div class="score-container">
+                    <span class="label">점수</span>
+                    <span id="score" class="value">0</span>
+                </div>
+                <div class="time-container">
+                    <span class="label">시간</span>
+                    <span id="time" class="value">60</span>
+                </div>
+                <div class="target-container">
+                    <span class="label">목표</span>
+                    <span id="target" class="value">10000</span>
+                </div>
+            </div>
+        </div>
+
+        <div id="game-board" class="game-board">
+            <!-- 게임 보드가 여기에 동적으로 생성됩니다 -->
+        </div>
+
+        <div class="game-controls">
+            <button id="start-btn" class="btn btn-primary">게임 시작</button>
+            <button id="restart-btn" class="btn btn-secondary" style="display: none;">다시 시작</button>
+        </div>
+    </div>
+
+    <div id="game-over-modal" class="modal">
+        <div class="modal-content">
+            <h2 id="game-result">게임 종료!</h2>
+            <p>최종 점수: <span id="final-score">0</span></p>
+            <button id="play-again-btn" class="btn btn-primary">다시 하기</button>
+        </div>
+    </div>
+
+    <script src="game.js"></script>
+</body>
+</html>
