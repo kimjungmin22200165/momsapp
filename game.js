@@ -19,6 +19,17 @@ class AnipangGame {
         this.touchStartPos = null;
         this.isDragging = false;
 
+        // 아이템 시스템
+        this.items = {
+            bomb: 3,
+            lightning: 3,
+            rainbow: 2,
+            time: 2,
+            shuffle: 2,
+            hint: 5
+        };
+        this.activeItem = null;
+
         this.initElements();
         this.bindEvents();
     }
@@ -34,6 +45,16 @@ class AnipangGame {
         this.finalScoreElement = document.getElementById('final-score');
         this.gameResultElement = document.getElementById('game-result');
         this.playAgainBtn = document.getElementById('play-again-btn');
+
+        // 아이템 버튼
+        this.itemButtons = {
+            bomb: document.getElementById('item-bomb'),
+            lightning: document.getElementById('item-lightning'),
+            rainbow: document.getElementById('item-rainbow'),
+            time: document.getElementById('item-time'),
+            shuffle: document.getElementById('item-shuffle'),
+            hint: document.getElementById('item-hint')
+        };
     }
 
     bindEvents() {
@@ -43,6 +64,11 @@ class AnipangGame {
             this.gameOverModal.classList.remove('show');
             this.startGame();
         });
+
+        // 아이템 버튼 이벤트
+        Object.keys(this.itemButtons).forEach(itemType => {
+            this.itemButtons[itemType].addEventListener('click', () => this.activateItem(itemType));
+        });
     }
 
     startGame() {
@@ -50,8 +76,20 @@ class AnipangGame {
         this.timeRemaining = this.timeLimit;
         this.gameRunning = true;
         this.selectedBlock = null;
+        this.activeItem = null;
+
+        // 아이템 개수 리셋
+        this.items = {
+            bomb: 3,
+            lightning: 3,
+            rainbow: 2,
+            time: 2,
+            shuffle: 2,
+            hint: 5
+        };
 
         this.updateDisplay();
+        this.updateItemButtons();
         this.startBtn.style.display = 'none';
         this.restartBtn.style.display = 'inline-block';
 
@@ -106,6 +144,18 @@ class AnipangGame {
 
     handleBlockClick(row, col) {
         if (!this.gameRunning || this.isProcessing) return;
+
+        // 아이템이 활성화된 경우
+        if (this.activeItem) {
+            if (this.activeItem === 'bomb') {
+                this.useBombItem(row, col);
+            } else if (this.activeItem === 'lightning') {
+                this.useLightningItem(row, col);
+            } else if (this.activeItem === 'rainbow') {
+                this.useRainbowItem(row, col);
+            }
+            return;
+        }
 
         const clickedBlock = { row, col };
 
@@ -435,6 +485,331 @@ class AnipangGame {
 
         this.touchStartPos = null;
         this.isDragging = false;
+    }
+
+    // 아이템 시스템
+    updateItemButtons() {
+        Object.keys(this.itemButtons).forEach(itemType => {
+            const button = this.itemButtons[itemType];
+            const count = this.items[itemType];
+            const countElement = button.querySelector('.item-count');
+
+            if (countElement) {
+                countElement.textContent = count;
+            }
+
+            if (count <= 0) {
+                button.disabled = true;
+            } else {
+                button.disabled = false;
+            }
+
+            // 활성화된 아이템 표시
+            if (this.activeItem === itemType) {
+                button.classList.add('active');
+            } else {
+                button.classList.remove('active');
+            }
+        });
+    }
+
+    activateItem(itemType) {
+        if (!this.gameRunning || this.items[itemType] <= 0) return;
+
+        // 즉시 실행되는 아이템들
+        if (itemType === 'time') {
+            this.useTimeItem();
+            return;
+        }
+
+        if (itemType === 'shuffle') {
+            this.useShuffleItem();
+            return;
+        }
+
+        if (itemType === 'hint') {
+            this.useHintItem();
+            return;
+        }
+
+        // 클릭이 필요한 아이템들
+        if (this.activeItem === itemType) {
+            // 같은 아이템 클릭 시 취소
+            this.activeItem = null;
+        } else {
+            this.activeItem = itemType;
+        }
+
+        this.updateItemButtons();
+    }
+
+    async useBombItem(row, col) {
+        if (this.items.bomb <= 0) return;
+
+        this.items.bomb--;
+        this.activeItem = null;
+        this.updateItemButtons();
+        this.isProcessing = true;
+
+        // 3x3 영역의 블록 제거
+        const blocksToRemove = [];
+        for (let r = Math.max(0, row - 1); r <= Math.min(this.boardSize - 1, row + 1); r++) {
+            for (let c = Math.max(0, col - 1); c <= Math.min(this.boardSize - 1, col + 1); c++) {
+                blocksToRemove.push({ row: r, col: c });
+                const blockElement = this.boardElement.querySelector(
+                    `[data-row="${r}"][data-col="${c}"]`
+                );
+                if (blockElement) {
+                    blockElement.classList.add('matched');
+                }
+            }
+        }
+
+        await this.delay(400);
+
+        // 점수 추가
+        this.score += blocksToRemove.length * 100;
+        this.updateDisplay();
+
+        // 블록 제거
+        blocksToRemove.forEach(block => {
+            this.board[block.row][block.col] = -1;
+        });
+
+        await this.dropBlocks();
+        this.fillBoard();
+        this.renderBoard();
+        await this.delay(300);
+
+        // 추가 매칭 확인
+        await this.processMatches();
+
+        this.isProcessing = false;
+    }
+
+    async useLightningItem(row, col) {
+        if (this.items.lightning <= 0) return;
+
+        this.items.lightning--;
+        this.activeItem = null;
+        this.updateItemButtons();
+        this.isProcessing = true;
+
+        // 가로 또는 세로 중 더 많은 블록이 있는 방향 선택
+        const rowBlocks = [];
+        const colBlocks = [];
+
+        for (let c = 0; c < this.boardSize; c++) {
+            rowBlocks.push({ row, col: c });
+        }
+
+        for (let r = 0; r < this.boardSize; r++) {
+            colBlocks.push({ row: r, col });
+        }
+
+        const blocksToRemove = rowBlocks.length >= colBlocks.length ? rowBlocks : colBlocks;
+
+        // 애니메이션
+        blocksToRemove.forEach(block => {
+            const blockElement = this.boardElement.querySelector(
+                `[data-row="${block.row}"][data-col="${block.col}"]`
+            );
+            if (blockElement) {
+                blockElement.classList.add('matched');
+            }
+        });
+
+        await this.delay(400);
+
+        // 점수 추가
+        this.score += blocksToRemove.length * 100;
+        this.updateDisplay();
+
+        // 블록 제거
+        blocksToRemove.forEach(block => {
+            this.board[block.row][block.col] = -1;
+        });
+
+        await this.dropBlocks();
+        this.fillBoard();
+        this.renderBoard();
+        await this.delay(300);
+
+        await this.processMatches();
+
+        this.isProcessing = false;
+    }
+
+    async useRainbowItem(row, col) {
+        if (this.items.rainbow <= 0) return;
+
+        this.items.rainbow--;
+        this.activeItem = null;
+        this.updateItemButtons();
+        this.isProcessing = true;
+
+        const targetAnimal = this.board[row][col];
+        const blocksToRemove = [];
+
+        // 같은 종류의 모든 블록 찾기
+        for (let r = 0; r < this.boardSize; r++) {
+            for (let c = 0; c < this.boardSize; c++) {
+                if (this.board[r][c] === targetAnimal) {
+                    blocksToRemove.push({ row: r, col: c });
+                    const blockElement = this.boardElement.querySelector(
+                        `[data-row="${r}"][data-col="${c}"]`
+                    );
+                    if (blockElement) {
+                        blockElement.classList.add('matched');
+                    }
+                }
+            }
+        }
+
+        await this.delay(400);
+
+        // 점수 추가
+        this.score += blocksToRemove.length * 150;
+        this.updateDisplay();
+
+        // 블록 제거
+        blocksToRemove.forEach(block => {
+            this.board[block.row][block.col] = -1;
+        });
+
+        await this.dropBlocks();
+        this.fillBoard();
+        this.renderBoard();
+        await this.delay(300);
+
+        await this.processMatches();
+
+        this.isProcessing = false;
+    }
+
+    useTimeItem() {
+        if (this.items.time <= 0) return;
+
+        this.items.time--;
+        this.timeRemaining += 10;
+        this.updateDisplay();
+        this.updateItemButtons();
+
+        // 시간 추가 효과
+        this.timeElement.style.color = '#4ecdc4';
+        this.timeElement.style.transform = 'scale(1.3)';
+        setTimeout(() => {
+            this.timeElement.style.color = '';
+            this.timeElement.style.transform = '';
+        }, 500);
+    }
+
+    useShuffleItem() {
+        if (this.items.shuffle <= 0 || this.isProcessing) return;
+
+        this.items.shuffle--;
+        this.updateItemButtons();
+
+        // 보드 섞기
+        const allAnimals = [];
+        for (let row = 0; row < this.boardSize; row++) {
+            for (let col = 0; col < this.boardSize; col++) {
+                allAnimals.push(this.board[row][col]);
+            }
+        }
+
+        // Fisher-Yates 셔플
+        for (let i = allAnimals.length - 1; i > 0; i--) {
+            const j = Math.floor(Math.random() * (i + 1));
+            [allAnimals[i], allAnimals[j]] = [allAnimals[j], allAnimals[i]];
+        }
+
+        // 보드에 다시 배치
+        let index = 0;
+        for (let row = 0; row < this.boardSize; row++) {
+            for (let col = 0; col < this.boardSize; col++) {
+                this.board[row][col] = allAnimals[index++];
+            }
+        }
+
+        this.renderBoard();
+    }
+
+    useHintItem() {
+        if (this.items.hint <= 0 || this.isProcessing) return;
+
+        this.items.hint--;
+        this.updateItemButtons();
+
+        // 가능한 매칭 찾기
+        const possibleMove = this.findPossibleMove();
+
+        if (possibleMove) {
+            const { block1, block2 } = possibleMove;
+
+            // 힌트 표시
+            const element1 = this.boardElement.querySelector(
+                `[data-row="${block1.row}"][data-col="${block1.col}"]`
+            );
+            const element2 = this.boardElement.querySelector(
+                `[data-row="${block2.row}"][data-col="${block2.col}"]`
+            );
+
+            if (element1 && element2) {
+                element1.style.border = '3px solid yellow';
+                element2.style.border = '3px solid yellow';
+
+                setTimeout(() => {
+                    element1.style.border = '';
+                    element2.style.border = '';
+                }, 2000);
+            }
+        }
+    }
+
+    findPossibleMove() {
+        // 모든 가능한 교환을 시도하여 매칭이 생기는지 확인
+        for (let row = 0; row < this.boardSize; row++) {
+            for (let col = 0; col < this.boardSize; col++) {
+                // 인접한 8방향 확인
+                const directions = [
+                    { dr: -1, dc: 0 }, { dr: 1, dc: 0 },
+                    { dr: 0, dc: -1 }, { dr: 0, dc: 1 },
+                    { dr: -1, dc: -1 }, { dr: -1, dc: 1 },
+                    { dr: 1, dc: -1 }, { dr: 1, dc: 1 }
+                ];
+
+                for (const dir of directions) {
+                    const newRow = row + dir.dr;
+                    const newCol = col + dir.dc;
+
+                    if (newRow >= 0 && newRow < this.boardSize &&
+                        newCol >= 0 && newCol < this.boardSize) {
+
+                        // 임시로 교환
+                        const temp = this.board[row][col];
+                        this.board[row][col] = this.board[newRow][newCol];
+                        this.board[newRow][newCol] = temp;
+
+                        // 매칭 확인
+                        const matches = this.findMatches();
+
+                        // 되돌리기
+                        this.board[newRow][newCol] = this.board[row][col];
+                        this.board[row][col] = temp;
+
+                        if (matches.length > 0) {
+                            return {
+                                block1: { row, col },
+                                block2: { row: newRow, col: newCol }
+                            };
+                        }
+                    }
+                }
+            }
+        }
+
+        return null;
     }
 }
 
